@@ -8,11 +8,10 @@ RSpec.describe "Drain messages", :sqs do
     queue_arn = sqs.get_queue_attributes(queue_url: queue_url, attribute_names: ["QueueArn"]).attributes.fetch("QueueArn")
     topic_arn = sns.create_topic(name: "my-topic").topic_arn
 
+    sns.publish(topic_arn: topic_arn, message: { sqs: "hallo" }.to_json)
     _subscription_arn = sns.subscribe(topic_arn: topic_arn, protocol: "sqs", endpoint: queue_arn).subscription_arn
 
-    sns.publish(topic_arn: topic_arn, message: { sqs: "hallo" }.to_json)
-
-    $fake_sns.drain(nil, sqs_endpoint: sqs.config.endpoint.to_s)
+    $fake_sns.drain(nil)
 
     attributes = sqs.get_queue_attributes(queue_url: queue_url, attribute_names: ["ApproximateNumberOfMessages"]).attributes
     expect(attributes.fetch("ApproximateNumberOfMessages")).to eq "1"
@@ -24,12 +23,12 @@ RSpec.describe "Drain messages", :sqs do
     queue_arn = sqs.get_queue_attributes(queue_url: queue_url, attribute_names: ["QueueArn"]).attributes.fetch("QueueArn")
     topic_arn = sns.create_topic(name: "my-topic").topic_arn
 
-    _subscription_arn = sns.subscribe(topic_arn: topic_arn, protocol: "sqs", endpoint: queue_arn).subscription_arn
 
     message_id = sns.publish(topic_arn: topic_arn, message: { sqs: "hallo" }.to_json).message_id
     sns.publish(topic_arn: topic_arn, message: { sqs: "world" }.to_json)
 
-    $fake_sns.drain(message_id, sqs_endpoint: sqs.config.endpoint.to_s)
+    _subscription_arn = sns.subscribe(topic_arn: topic_arn, protocol: "sqs", endpoint: queue_arn).subscription_arn
+    $fake_sns.drain(message_id)
 
     attributes = sqs.get_queue_attributes(queue_url: queue_url, attribute_names: ["ApproximateNumberOfMessages"]).attributes
     expect(attributes.fetch("ApproximateNumberOfMessages")).to eq "1"
@@ -54,13 +53,13 @@ RSpec.describe "Drain messages", :sqs do
 
     topic_arn = sns.create_topic(name: "my-topic").topic_arn
 
-    subscription_arn = sns.subscribe(topic_arn: topic_arn, protocol: "http", endpoint: "http://localhost:5051/endpoint").subscription_arn
-
     message_id = sns.publish(topic_arn: topic_arn, message: { default: "hallo" }.to_json).message_id
 
     wait_for { Faraday.new("http://localhost:5051").get("/").success? rescue false }
 
-    $fake_sns.drain(nil, sqs_endpoint: sqs.config.endpoint.to_s)
+    subscription_arn = sns.subscribe(topic_arn: topic_arn, protocol: "http", endpoint: "http://localhost:5051/endpoint").subscription_arn
+
+    $fake_sns.drain(nil)
 
     app_runner.kill
 

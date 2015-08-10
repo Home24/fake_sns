@@ -9,7 +9,7 @@ module FakeSNS
     end
 
     def database
-      $database ||= FakeSNS::Database.new(settings.database)
+      $database ||= FakeSNS::Database.new(settings)
     end
 
     def action
@@ -51,11 +51,10 @@ module FakeSNS
     end
 
     post "/drain" do
-      config = JSON.parse(request.body.read.to_s)
       begin
         database.transaction do
           database.each_deliverable_message do |subscription, message|
-            DeliverMessage.call(subscription: subscription, message: message, request: request, config: config)
+            DeliverMessage.call(subscription: subscription, message: message, config: settings)
           end
         end
       rescue => e
@@ -67,11 +66,10 @@ module FakeSNS
     end
 
     post "/drain/:message_id" do |message_id|
-      config = JSON.parse(request.body.read.to_s)
       database.transaction do
         database.each_deliverable_message do |subscription, message|
           if message.id == message_id
-            DeliverMessage.call(subscription: subscription, message: message, request: request, config: config)
+            DeliverMessage.call(subscription: subscription, message: message, config: settings)
           end
         end
       end

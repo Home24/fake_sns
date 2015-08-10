@@ -26,6 +26,8 @@ module FakeSNS
           target_arn:  target_arn,
           received_at: Time.now,
         )
+
+        db.deliver_message(message_id)
       end
 
       def message_id

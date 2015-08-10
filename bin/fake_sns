@@ -7,11 +7,16 @@ require 'fake_sns'
 require 'optparse'
 
 options = {
-  :port      => 9292,
-  :bind      => "0.0.0.0",
-  :verbose   => false,
-  :daemonize => false,
-  :database  => nil,
+  :port              => 9292,
+  :bind              => "0.0.0.0",
+  :verbose           => false,
+  :daemonize         => false,
+  :database          => nil,
+  :sqs_endpoint      => "http://localhost:4568",
+  :region            => "us-east-1",
+  :access_key_id     => "FOO",
+  :secret_access_key => "BAR",
+
 }
 
 parser = OptionParser.new do |o|
@@ -47,6 +52,22 @@ parser = OptionParser.new do |o|
   o.on_tail "--version", "Shows the version" do
     puts "fake_sns version #{FakeSNS::VERSION}"
     exit
+  end
+
+  o.on "-S" "--sqs-endpoint", "SQS endpoint to use instead if default" do |sqs_endpoint|
+    options[:sqs_endpoint] = sqs_endpoint
+  end
+
+  o.on "--access-key-id", "AWS access key to use" do |access_key_id|
+    options[:access_key_id] = access_key_id
+  end
+
+  o.on "--secret-access-key", "AWS secret access key to use" do |secret_access_key|
+    options[:secret_access_key] = secret_access_key
+  end
+
+  o.on "--region", "AWS region" do |region|
+    options[:region] = region
   end
 
   o.on_tail "-h", "--help", "Shows this help page" do

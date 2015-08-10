@@ -5,9 +5,11 @@ module FakeSNS
   class Database
 
     attr_reader :database_filename
+    attr_reader :settings
 
-    def initialize(database_filename)
-      @database_filename = database_filename || File.join(Dir.home, ".fake_sns.yml")
+    def initialize(settings)
+      @database_filename = settings.database || File.join(Dir.home, ".fake_sns.yml")
+      @settings = settings
     end
 
     def perform(action, params)
@@ -56,6 +58,14 @@ module FakeSNS
               yield subscription, message
             end
           end
+        end
+      end
+    end
+
+    def deliver_message(message_id)
+      each_deliverable_message do |subscription, message|
+        if message.id == message_id
+          DeliverMessage.call(subscription: subscription, message: message, config: @settings)
         end
       end
     end

@@ -61,15 +61,9 @@ module FakeSNS
       YAML.load(connection.get("/").body)
     end
 
-    def drain(message_id = nil, options = {})
+    def drain(message_id = nil)
       path = message_id ? "/drain/#{message_id}" : "/drain"
-      default = {
-        region:             Aws.config[:region],
-        access_key_id:      Aws.config[:credentials].access_key_id,
-        secret_access_key:  Aws.config[:credentials].secret_access_key,
-      }
-      body = default.merge(options).to_json
-      result = connection.post(path, body)
+      result = connection.post(path, "")
       if result.success?
         true
       else

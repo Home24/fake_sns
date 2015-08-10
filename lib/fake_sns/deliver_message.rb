@@ -10,14 +10,13 @@ module FakeSNS
       new(options).call
     end
 
-    attr_reader :subscription, :message, :config, :request
+    attr_reader :subscription, :message, :config
 
     def_delegators :subscription, :protocol, :endpoint, :arn
 
     def initialize(options)
       @subscription = options.fetch(:subscription)
       @message = options.fetch(:message)
-      @request = options.fetch(:request)
       @config = options.fetch(:config)
     end
 
@@ -35,10 +34,10 @@ module FakeSNS
     def sqs
       queue_name = endpoint.split(":").last
       sqs = Aws::SQS::Client.new(
-        region: config.fetch("region"),
-        credentials: Aws::Credentials.new(config.fetch("access_key_id"), config.fetch("secret_access_key")),
+        region: config.region,
+        credentials: Aws::Credentials.new(config.access_key_id, config.secret_access_key),
       ).tap { |client|
-        client.config.endpoint = URI(config.fetch("sqs_endpoint"))
+        client.config.endpoint = URI(config.sqs_endpoint)
       }
       queue_url = sqs.get_queue_url(queue_name: queue_name).queue_url
       sqs.send_message(queue_url: queue_url, message_body: message_contents)
