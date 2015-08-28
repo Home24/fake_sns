@@ -40,7 +40,19 @@ module FakeSNS
         client.config.endpoint = URI(config.sqs_endpoint)
       }
       queue_url = sqs.get_queue_url(queue_name: queue_name).queue_url
-      sqs.send_message(queue_url: queue_url, message_body: message_contents)
+
+      sqs.send_message(queue_url: queue_url, message_body: {
+        "Type"             => "Notification",
+        "MessageId"        => message.id,
+        "TopicArn"         => message.topic_arn,
+        "Subject"          => message.subject,
+        "Message"          => message_contents,
+        "Timestamp"        => message.received_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "SignatureVersion" => "1",
+        "Signature"        => "Fake",
+        "SigningCertURL"   => "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-f3ecfb7224c7233fe7bb5f59f96de52f.pem",
+        "UnsubscribeURL"   => "", # TODO url to unsubscribe URL on this server
+      }.to_json)
     end
 
     def http

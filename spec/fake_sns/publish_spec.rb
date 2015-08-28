@@ -34,6 +34,12 @@ RSpec.describe "Publishing", :sqs do
 
     attributes = sqs.get_queue_attributes(queue_url: queue_url, attribute_names: ["ApproximateNumberOfMessages"]).attributes
     expect(attributes.fetch("ApproximateNumberOfMessages")).to eq "1"
+
+    received = sqs.receive_message(queue_url: queue_url)
+    body = received.messages[0].body
+    unserialized_body = JSON.parse(body)
+
+    expect(unserialized_body["Message"]).to eq 'hallo'
   end
 
 end
