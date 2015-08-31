@@ -53,8 +53,11 @@ module FakeSNS
     def each_deliverable_message
       topics.each do |topic|
         subscriptions.each do |subscription|
+          if subscription.topic_arn != topic.arn then
+            next
+          end
           messages.each do |message|
-            if message.topic_arn == topic.arn
+            if message.topic_arn == subscription.topic_arn
               yield subscription, message
             end
           end

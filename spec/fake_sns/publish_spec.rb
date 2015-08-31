@@ -42,4 +42,22 @@ RSpec.describe "Publishing", :sqs do
     expect(unserialized_body["Message"]).to eq 'hallo'
   end
 
+  it "publishes message to correct queue" do
+    queue1_url = sqs.create_queue(queue_name: "my-queue1").queue_url
+    queue1_arn = sqs.get_queue_attributes(queue_url: queue1_url, attribute_names: ["QueueArn"]).attributes.fetch("QueueArn")
+    topic1_arn = sns.create_topic(name: "my-topic1").topic_arn
+
+    queue2_url = sqs.create_queue(queue_name: "my-queue2").queue_url
+    queue2_arn = sqs.get_queue_attributes(queue_url: queue2_url, attribute_names: ["QueueArn"]).attributes.fetch("QueueArn")
+    topic2_arn = sns.create_topic(name: "my-topic2").topic_arn
+
+    subscription1_arn = sns.subscribe(topic_arn: topic1_arn, protocol: "sqs", endpoint: queue1_arn).subscription_arn
+    subscription2_arn = sns.subscribe(topic_arn: topic2_arn, protocol: "sqs", endpoint: queue2_arn).subscription_arn
+
+    sns.publish(topic_arn: topic2_arn, message: { sqs: "hallo" }.to_json)
+
+    attributes = sqs.get_queue_attributes(queue_url: queue1_url, attribute_names: ["ApproximateNumberOfMessages"]).attributes
+    expect(attributes.fetch("ApproximateNumberOfMessages")).to eq "0"
+  end
+
 end
