@@ -5,6 +5,18 @@ A small web app for local SNS development.
 It contains a small store to inspect, and some methods to inspect and change the
 contents, so you can create scenarios.
 
+Owner|Type
+---|---
+Scaling|Support
+
+##### Tech
+
+- Ruby
+
+##### Contexts
+
+- MaintenanceOnly
+
 ### Noteworthy differences:
 
 * No checking of access keys.
